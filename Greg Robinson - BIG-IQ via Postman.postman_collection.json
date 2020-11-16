@@ -1,0 +1,843 @@
+{
+	"info": {
+		"_postman_id": "a5876b2b-c881-4491-918a-6ce905cace96",
+		"name": "BIG-IQ via Postman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get BIG-IP Device",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "d41c5bf7-a077-4aad-b75b-f0569f87d1ed",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "0724a484-f43b-47e1-80a3-745a54f1436f",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"pm.environment.set(\"big-ip-device\", jsonData.items[0].selfLink);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"value": "{{X-F5-Auth-Token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://{{BIG-IQ_HOST}}/mgmt/shared/resolver/device-groups/cm-adccore-allbigipDevices/devices",
+					"protocol": "https",
+					"host": [
+						"{{BIG-IQ_HOST}}"
+					],
+					"path": [
+						"mgmt",
+						"shared",
+						"resolver",
+						"device-groups",
+						"cm-adccore-allbigipDevices",
+						"devices"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Node(s)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3fa408b9-d194-4834-b647-e1231212fd24",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "79038fbc-2aa8-46d4-aad6-baf995a6364f",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"pm.environment.set(\"big-ip-node\", jsonData.selfLink);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"value": "{{X-F5-Auth-Token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"partition\": \"Common\",\n    \"name\": \"{{NODES}}\",\n    \"address\": \"{{NODES}}\",\n    \"deviceReference\": {\n        \"link\": \"{{big-ip-device}}\"\n    }\n}"
+				},
+				"url": {
+					"raw": "https://{{BIG-IQ_HOST}}/mgmt/cm/adc-core/working-config/ltm/node",
+					"protocol": "https",
+					"host": [
+						"{{BIG-IQ_HOST}}"
+					],
+					"path": [
+						"mgmt",
+						"cm",
+						"adc-core",
+						"working-config",
+						"ltm",
+						"node"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Pool",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3fa408b9-d194-4834-b647-e1231212fd24",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a0c4f81-1a35-4463-9f37-5f2b244f7f04",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"var bigiqMgmtIp = pm.environment.get(\"BIG-IQ_HOST\");",
+							"var selfLink = jsonData.selfLink;",
+							"pm.environment.set(\"big-ip-pool\", selfLink);",
+							"pm.environment.set(\"big-ip-pool-url\", selfLink.replace(\"localhost\",bigiqMgmtIp));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"type": "text",
+						"value": "{{X-F5-Auth-Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"partition\": \"Common\",\n    \"name\": \"pool-{{APP_NAME}}\",\n    \"loadBalancingMode\": \"round-robin\",\n    \"deviceReference\": {\n        \"link\": \"{{big-ip-device}}\"\n    }\n}"
+				},
+				"url": {
+					"raw": "https://{{BIG-IQ_HOST}}/mgmt/cm/adc-core/working-config/ltm/pool",
+					"protocol": "https",
+					"host": [
+						"{{BIG-IQ_HOST}}"
+					],
+					"path": [
+						"mgmt",
+						"cm",
+						"adc-core",
+						"working-config",
+						"ltm",
+						"pool"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Associate Pool Member to Pool",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3fa408b9-d194-4834-b647-e1231212fd24",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a0c4f81-1a35-4463-9f37-5f2b244f7f04",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"pm.environment.set(\"big-ip-pool\", jsonData.selfLink);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"type": "text",
+						"value": "{{X-F5-Auth-Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"partition\": \"Common\",\n    \"name\": \"{{NODES}}:{{VIRTUAL-PORT}}\",\n    \"port\": {{VIRTUAL-PORT}},\n    \"nodeReference\": {\n        \"link\": \"{{big-ip-node}}\"\n    }\n}"
+				},
+				"url": {
+					"raw": "{{big-ip-pool-url}}/members",
+					"host": [
+						"{{big-ip-pool-url}}"
+					],
+					"path": [
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Virtual Server",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3fa408b9-d194-4834-b647-e1231212fd24",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a0c4f81-1a35-4463-9f37-5f2b244f7f04",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"var bigiqMgmtIp = pm.environment.get(\"BIG-IQ_HOST\");",
+							"var selfLink = jsonData.selfLink;",
+							"pm.environment.set(\"big-ip-virtual\", selfLink);",
+							"pm.environment.set(\"big-ip-virtual-url\", selfLink.replace(\"localhost\",bigiqMgmtIp));",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"type": "text",
+						"value": "{{X-F5-Auth-Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"partition\": \"Common\",\n    \"name\": \"vs-{{APP_NAME}}\",\n    \"destinationAddress\": \"{{VIRTUAL-IP}}\",\n    \"mask\": \"{{VIRTUAL-MASK}}\",\n    \"destinationPort\": {{VIRTUAL-PORT}},\n    \"sourceAddress\": \"0.0.0.0/0\",\n    \"deviceReference\": {\n        \"link\": \"{{big-ip-device}}\"\n    }\n}"
+				},
+				"url": {
+					"raw": "https://{{BIG-IQ_HOST}}/mgmt/cm/adc-core/working-config/ltm/virtual",
+					"protocol": "https",
+					"host": [
+						"{{BIG-IQ_HOST}}"
+					],
+					"path": [
+						"mgmt",
+						"cm",
+						"adc-core",
+						"working-config",
+						"ltm",
+						"virtual"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Attach Pool to Virtual Server",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3fa408b9-d194-4834-b647-e1231212fd24",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a0c4f81-1a35-4463-9f37-5f2b244f7f04",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"var bigiqMgmtIp = pm.environment.get(\"BIG-IQ_HOST\");",
+							"var selfLink = jsonData.selfLink;",
+							"pm.environment.set(\"big-ip-virtual\", selfLink);",
+							"pm.environment.set(\"big-ip-virtual-url\", selfLink.replace(\"localhost\",bigiqMgmtIp));",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"type": "text",
+						"value": "{{X-F5-Auth-Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"partition\": \"Common\",\n    \"poolReference\": {\n        \"link\": \"{{big-ip-pool-url}}\"\n    }\n}"
+				},
+				"url": {
+					"raw": "{{big-ip-virtual-url}}",
+					"host": [
+						"{{big-ip-virtual-url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create TCP profile",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3fa408b9-d194-4834-b647-e1231212fd24",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a0c4f81-1a35-4463-9f37-5f2b244f7f04",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"var bigiqMgmtIp = pm.environment.get(\"BIG-IQ_HOST\");",
+							"var selfLink = jsonData.selfLink;",
+							"pm.environment.set(\"big-ip-profile\", selfLink);",
+							"pm.environment.set(\"big-ip-profile-url\", selfLink.replace(\"localhost\",bigiqMgmtIp));",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"type": "text",
+						"value": "{{X-F5-Auth-Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"partition\": \"Common\",\n    \"name\": \"tcp_profile-{{APP_NAME}}\"\n}"
+				},
+				"url": {
+					"raw": "https://{{BIG-IQ_HOST}}/mgmt/cm/adc-core/working-config/ltm/profile/tcp",
+					"protocol": "https",
+					"host": [
+						"{{BIG-IQ_HOST}}"
+					],
+					"path": [
+						"mgmt",
+						"cm",
+						"adc-core",
+						"working-config",
+						"ltm",
+						"profile",
+						"tcp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Attach Profile to Virtual Server",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3fa408b9-d194-4834-b647-e1231212fd24",
+						"exec": [
+							"var BIGIQ_MGMT_IP = pm.environment.get(\"BIG-IQ_HOST\");\r",
+							"var BIGIQ_ADMIN_USERNAME = pm.environment.get(\"USERNAME\");\r",
+							"var BIGIQ_ADMIN_PASSWORD = pm.environment.get(\"PASSWORD\");\r",
+							"var credentials = {};\r",
+							"credentials.username = BIGIQ_ADMIN_USERNAME;\r",
+							"credentials.password = BIGIQ_ADMIN_PASSWORD;\r",
+							"credentials.provider = 'tmos';\r",
+							"const authTokenRequest = {\r",
+							"  url: 'https://'.concat(BIGIQ_MGMT_IP,'/mgmt/shared/authn/login'),\r",
+							"  method: 'POST',\r",
+							"  header: 'Content-Type:application/json',\r",
+							"  body: {\r",
+							"    mode: 'application/json',\r",
+							"    raw: JSON.stringify(credentials)\r",
+							"  }\r",
+							"};\r",
+							"\r",
+							"var getToken = true;\r",
+							"\r",
+							"if (!pm.environment.get('F5-Auth-Token-Expiry') || \r",
+							"    !pm.environment.get('X-F5-Auth-Token')) {\r",
+							"    console.log('Token or expiry date are missing');\r",
+							"} else if (pm.environment.get('F5-Auth-Token-Expiry') <= (new Date()).getTime()) {\r",
+							"    console.log('Token is expired');\r",
+							"} else {\r",
+							"    getToken = false;\r",
+							"    console.log('Token and expiry date are all good');\r",
+							"}\r",
+							"\r",
+							"if (getToken === true) {\r",
+							"    pm.sendRequest(authTokenRequest, function (err, res) {\r",
+							"    console.log(err ? err : res.json());\r",
+							"        if (err === null) {\r",
+							"            var responseJson = res.json();\r",
+							"            pm.environment.set('X-F5-Auth-Token', responseJson.token.token);\r",
+							"            var expiryDate = new Date();\r",
+							"            expiryDate.setSeconds(expiryDate.getSeconds() + responseJson.token.timeout);\r",
+							"            pm.environment.set('F5-Auth-Token-Expiry', expiryDate.getTime());\r",
+							"        }\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "4a0c4f81-1a35-4463-9f37-5f2b244f7f04",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"var bigiqMgmtIp = pm.environment.get(\"BIG-IQ_HOST\");",
+							"var selfLink = jsonData.selfLink;",
+							"pm.environment.set(\"big-ip-virtual\", selfLink);",
+							"pm.environment.set(\"big-ip-virtual-url\", selfLink.replace(\"localhost\",bigiqMgmtIp));",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "X-F5-Auth-Token",
+						"type": "text",
+						"value": "{{X-F5-Auth-Token}}"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"partition\": \"Common\",\n    \"name\": \"vs-{{APP_NAME}}\",\n    \"destinationAddress\": \"10.10.10.10\",\n    \"mask\": \"255.255.255.255\",\n    \"destinationPort\": 80,\n    \"sourceAddress\": \"0.0.0.0/0\",\n    \"deviceReference\": {\n        \"link\": \"{{big-ip-device}}\"\n    }\n}"
+				},
+				"url": {
+					"raw": "{{big-ip-virtual-url}}",
+					"host": [
+						"{{big-ip-virtual-url}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "bbccbb35-5f2c-494e-941d-3612cf8f2245",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "7986c9e0-6996-4548-b105-01776a7814a7",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
